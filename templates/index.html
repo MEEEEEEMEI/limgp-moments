@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="card" style="margin-bottom: 24px;">
+    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+      <div class="muted" style="margin-bottom: 8px;">上传图片 + 文字说明</div>
+      <input type="text" name="caption" placeholder="写下这一刻的文字" maxlength="200" />
+      <input type="password" name="token" placeholder="上传口令" required />
+      <input type="file" name="image" accept="image/*" required />
+      <button class="btn" type="submit">上传</button>
+    </form>
+  </div>
+
+  <div class="grid">
+    {% for item in items %}
+      <div class="card moment">
+        {% if item.image.startswith('uploads/') %}
+          <img src="{{ url_for('static', filename=item.image) }}" alt="moment" />
+        {% else %}
+          <img src="{{ url_for('uploaded_file', filename=item.image) }}" alt="moment" />
+        {% endif %}
+        {% if item.caption %}
+          <p>{{ item.caption }}</p>
+        {% endif %}
+        <span>{{ item.created_at }}</span>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

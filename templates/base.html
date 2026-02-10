@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LiMgP 满分时刻</title>
+    <style>
+      :root {
+        --bg: #0b0c10;
+        --ink: #f2f2f2;
+        --accent: #4dd6ff;
+        --card: #14161b;
+        --muted: #a1a1aa;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Source Han Serif SC", "Noto Serif SC", serif;
+        color: var(--ink);
+        background: radial-gradient(circle at 10% 20%, #1b1f2a, var(--bg));
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px 32px;
+      }
+      .title {
+        font-size: 28px;
+        letter-spacing: 1px;
+      }
+      .container { padding: 0 32px 48px; }
+      .card {
+        background: var(--card);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+        padding: 20px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 20px;
+      }
+      .moment img { width: 100%; border-radius: 12px; display: block; }
+      .moment p { margin: 10px 0 4px; }
+      .moment span { color: var(--muted); font-size: 12px; }
+      .btn {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .muted { color: var(--muted); }
+      form input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #2a2f3a;
+        background: #0f1116;
+        color: var(--ink);
+        margin-bottom: 12px;
+      }
+      form input[type="file"] { margin-bottom: 12px; }
+      .login {
+        max-width: 420px;
+        margin: 80px auto;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="title">LiMgP · 满分时刻</div>
+    </header>
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

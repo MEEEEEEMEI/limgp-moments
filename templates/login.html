@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="card login">
+    <form action="{{ url_for('login') }}" method="post">
+      <div class="muted" style="margin-bottom: 8px;">请输入密码</div>
+      <input type="password" name="password" placeholder="密码" required />
+      {% if error %}
+        <div class="muted" style="color:#c0392b; margin-bottom:10px;">{{ error }}</div>
+      {% endif %}
+      <button class="btn" type="submit">进入</button>
+    </form>
+  </div>
+{% endblock %}
