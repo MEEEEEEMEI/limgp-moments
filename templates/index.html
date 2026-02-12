@@ -13,7 +13,9 @@
   <div class="grid">
     {% for item in items %}
       <div class="card moment">
-        {% if item.image.startswith('uploads/') %}
+        {% if item.image_url %}
+          <img src="{{ item.image_url }}" alt="moment" />
+        {% elif item.image.startswith('uploads/') %}
           <img src="{{ url_for('static', filename=item.image) }}" alt="moment" />
         {% else %}
           <img src="{{ url_for('uploaded_file', filename=item.image) }}" alt="moment" />
