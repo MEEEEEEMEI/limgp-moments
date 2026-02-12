@@ -22,6 +22,11 @@
       <div class="card moment">
         {% if item.image_url %}
           <img src="{{ item.image_url }}" alt="moment" />
+          {% if debug %}
+            <div class="muted" style="margin-top:6px; font-size:12px; word-break: break-all;">
+              {{ item.image_url }}
+            </div>
+          {% endif %}
         {% elif item.image.startswith('uploads/') %}
           <img src="{{ url_for('static', filename=item.image) }}" alt="moment" />
         {% else %}

@@ -107,7 +107,8 @@ def index():
     items = _load_items()
     msg = request.args.get("msg", "")
     level = request.args.get("level", "")
-    return render_template("index.html", items=items, msg=msg, level=level)
+    debug = request.args.get("debug", "") == "1"
+    return render_template("index.html", items=items, msg=msg, level=level, debug=debug)
 
 
 @app.route("/uploads/<path:filename>")
