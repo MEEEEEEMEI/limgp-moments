@@ -36,6 +36,7 @@ def _load_items() -> list[dict[str, Any]]:
         try:
             resp = cloudinary.Search() \
                 .expression(f"tags:{TAG}") \
+                .with_field("context") \
                 .sort_by("created_at", "desc") \
                 .max_results(100) \
                 .execute()
