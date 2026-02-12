@@ -93,7 +93,9 @@ def _save_items(items: list[dict[str, Any]]) -> None:
 @app.route("/", methods=["GET"])
 def index():
     items = _load_items()
-    return render_template("index.html", items=items)
+    msg = request.args.get("msg", "")
+    level = request.args.get("level", "")
+    return render_template("index.html", items=items, msg=msg, level=level)
 
 
 @app.route("/uploads/<path:filename>")
@@ -107,23 +109,27 @@ def upload():
     token = (request.form.get("token") or "").strip()
     required = os.environ.get("UPLOAD_TOKEN", "").strip()
     if required and token != required:
-        return redirect(url_for("index"))
+        return redirect(url_for("index", msg="上传口令不正确", level="error"))
     file = request.files.get("image")
     if not file or file.filename == "":
-        return redirect(url_for("index"))
+        return redirect(url_for("index", msg="请选择图片文件", level="error"))
 
     filename = secure_filename(file.filename)
     ext = Path(filename).suffix.lower()
     if ext not in ALLOWED_EXTS:
-        return redirect(url_for("index"))
+        return redirect(url_for("index", msg="仅支持 JPG/PNG/GIF/WEBP 图片", level="error"))
 
     if USE_CLOUDINARY:
-        cloudinary.uploader.upload(
-            file,
-            folder=CLOUD_FOLDER,
-            tags=[TAG],
-            context={"caption": caption},
-        )
+        try:
+            cloudinary.uploader.upload(
+                file,
+                folder=CLOUD_FOLDER,
+                tags=[TAG],
+                context={"caption": caption},
+            )
+        except Exception:
+            app.logger.exception("Cloudinary upload failed")
+            return redirect(url_for("index", msg="上传失败，请稍后再试", level="error"))
     else:
         unique_name = f"{uuid.uuid4().hex}{ext}"
         save_path = UPLOAD_DIR / unique_name
@@ -140,7 +146,7 @@ def upload():
         )
         _save_items(items)
 
-    return redirect(url_for("index"))
+    return redirect(url_for("index", msg="上传成功", level="success"))
 
 
 @app.errorhandler(413)

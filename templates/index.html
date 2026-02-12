@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
+  {% if msg %}
+    <div class="card" style="margin-bottom: 16px; border: 1px solid {% if level == 'error' %}#7f1d1d{% else %}#14532d{% endif %};">
+      <div style="color: {% if level == 'error' %}#fca5a5{% else %}#86efac{% endif %};">
+        {{ msg }}
+      </div>
+    </div>
+  {% endif %}
   <div class="card" style="margin-bottom: 24px;">
     <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
       <div class="muted" style="margin-bottom: 8px;">上传图片 + 文字说明</div>
