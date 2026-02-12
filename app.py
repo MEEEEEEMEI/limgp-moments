@@ -21,6 +21,7 @@ DATA_FILE = DATA_DIR / "data.json"
 ALLOWED_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB
 CLOUD_FOLDER = "limgp_moments"
+TAG = "limgp_moments"
 USE_CLOUDINARY = bool(os.environ.get("CLOUDINARY_URL"))
 
 app = Flask(__name__)
@@ -33,17 +34,36 @@ if not USE_CLOUDINARY:
 def _load_items() -> list[dict[str, Any]]:
     if USE_CLOUDINARY:
         try:
-            resp = cloudinary.api.resources(
-                resource_type="image",
-                type="upload",
-                prefix=f"{CLOUD_FOLDER}/",
-                context=True,
-                max_results=100,
-            )
+            resp = cloudinary.Search() \
+                .expression(f"tags:{TAG}") \
+                .sort_by("created_at", "desc") \
+                .max_results(100) \
+                .execute()
+            resources = resp.get("resources", [])
         except Exception:
-            return []
+            app.logger.exception("Cloudinary search failed")
+            resources = []
+
+        if not resources:
+            try:
+                resp = cloudinary.api.resources(
+                    resource_type="image",
+                    type="upload",
+                    prefix=f"{CLOUD_FOLDER}/",
+                    tags=True,
+                    context=True,
+                    max_results=100,
+                )
+                resources = [
+                    r for r in resp.get("resources", [])
+                    if TAG in (r.get("tags") or [])
+                ]
+            except Exception:
+                app.logger.exception("Cloudinary resources list failed")
+                resources = []
+
         items = []
-        for r in resp.get("resources", []):
+        for r in resources:
             context = r.get("context") or {}
             caption = context.get("caption", "")
             items.append(
@@ -101,6 +121,7 @@ def upload():
         cloudinary.uploader.upload(
             file,
             folder=CLOUD_FOLDER,
+            tags=[TAG],
             context={"caption": caption},
         )
     else:
