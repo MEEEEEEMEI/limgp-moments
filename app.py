@@ -32,6 +32,13 @@ if not USE_CLOUDINARY:
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def _extract_year(created_at: str) -> str:
+    try:
+        return created_at[:4]
+    except Exception:
+        return ""
+
+
 def _load_items() -> list[dict[str, Any]]:
     if USE_CLOUDINARY:
         try:
@@ -86,6 +93,7 @@ def _load_items() -> list[dict[str, Any]]:
                     "image_url": image_url,
                     "caption": caption,
                     "created_at": r.get("created_at", ""),
+                    "year": context.get("year") or _extract_year(r.get("created_at", "")),
                 }
             )
         items.sort(key=lambda x: x.get("created_at") or "", reverse=True)
@@ -107,10 +115,23 @@ def _save_items(items: list[dict[str, Any]]) -> None:
 @app.route("/", methods=["GET"])
 def index():
     items = _load_items()
+    year = request.args.get("year", "").strip()
+    if year:
+        items = [i for i in items if str(i.get("year", "")) == year]
     msg = request.args.get("msg", "")
     level = request.args.get("level", "")
     debug = request.args.get("debug", "") == "1"
-    return render_template("index.html", items=items, msg=msg, level=level, debug=debug)
+    all_items = _load_items()
+    years = sorted({str(i.get("year", "")) for i in all_items if i.get("year")}, reverse=True)
+    return render_template(
+        "index.html",
+        items=items,
+        msg=msg,
+        level=level,
+        debug=debug,
+        years=years,
+        selected_year=year,
+    )
 
 
 @app.route("/uploads/<path:filename>")
@@ -121,6 +142,9 @@ def uploaded_file(filename: str):
 @app.route("/upload", methods=["POST"])
 def upload():
     caption = (request.form.get("caption") or "").strip()
+    year = (request.form.get("year") or "").strip()
+    if not year:
+        year = datetime.now().strftime("%Y")
     token = (request.form.get("token") or "").strip()
     required = os.environ.get("UPLOAD_TOKEN", "").strip()
     if required and token != required:
@@ -140,7 +164,7 @@ def upload():
                 file,
                 folder=CLOUD_FOLDER,
                 tags=[TAG],
-                context={"caption": caption},
+                context={"caption": caption, "year": year},
             )
         except Exception:
             app.logger.exception("Cloudinary upload failed")
@@ -158,6 +182,7 @@ def upload():
                 "image": unique_name,
                 "caption": caption,
                 "created_at": datetime.now().isoformat(timespec="seconds"),
+                "year": datetime.now().strftime("%Y"),
             }
         )
         _save_items(items)

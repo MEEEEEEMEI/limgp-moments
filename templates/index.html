@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
+  {% if years %}
+    <div class="card" style="margin-bottom: 16px;">
+      <div class="muted" style="margin-bottom: 8px;">按年份筛选</div>
+      <div>
+        <a class="btn" style="text-decoration:none; margin-right:8px; {% if not selected_year %}background:#22c55e;color:#0b0c10;{% endif %}" href="{{ url_for('index') }}">全部</a>
+        {% for y in years %}
+          <a class="btn" style="text-decoration:none; margin-right:8px; {% if selected_year == y %}background:#22c55e;color:#0b0c10;{% endif %}" href="{{ url_for('index', year=y) }}">{{ y }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
   {% if msg %}
     <div class="card" style="margin-bottom: 16px; border: 1px solid {% if level == 'error' %}#7f1d1d{% else %}#14532d{% endif %};">
       <div style="color: {% if level == 'error' %}#fca5a5{% else %}#86efac{% endif %};">
@@ -11,6 +22,7 @@
     <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
       <div class="muted" style="margin-bottom: 8px;">上传图片 + 文字说明</div>
       <input type="text" name="caption" placeholder="写下这一刻的文字" maxlength="200" />
+      <input type="text" name="year" placeholder="年份（如 2026）" value="{{ selected_year }}" />
       <input type="password" name="token" id="admin-token" placeholder="管理口令（上传/删除）" required />
       <input type="file" name="image" accept="image/*" required />
       <button class="btn" type="submit">上传</button>
