@@ -75,6 +75,7 @@ def _load_items() -> list[dict[str, Any]]:
         for r in resources:
             context = r.get("context") or {}
             caption = context.get("caption", "")
+            category = context.get("category", "")
             public_id = r.get("public_id") or ""
             image_url = r.get("secure_url") or r.get("url")
             if public_id:
@@ -94,6 +95,7 @@ def _load_items() -> list[dict[str, Any]]:
                     "caption": caption,
                     "created_at": r.get("created_at", ""),
                     "year": context.get("year") or _extract_year(r.get("created_at", "")),
+                    "category": category,
                 }
             )
         items.sort(key=lambda x: x.get("created_at") or "", reverse=True)
@@ -116,13 +118,17 @@ def _save_items(items: list[dict[str, Any]]) -> None:
 def index():
     items = _load_items()
     year = request.args.get("year", "").strip()
+    category = request.args.get("category", "").strip()
     if year:
         items = [i for i in items if str(i.get("year", "")) == year]
+    if category:
+        items = [i for i in items if i.get("category", "") == category]
     msg = request.args.get("msg", "")
     level = request.args.get("level", "")
     debug = request.args.get("debug", "") == "1"
     all_items = _load_items()
     years = sorted({str(i.get("year", "")) for i in all_items if i.get("year")}, reverse=True)
+    categories = sorted({str(i.get("category", "")) for i in all_items if i.get("category")})
     return render_template(
         "index.html",
         items=items,
@@ -131,6 +137,8 @@ def index():
         debug=debug,
         years=years,
         selected_year=year,
+        categories=categories,
+        selected_category=category,
     )
 
 
@@ -145,6 +153,7 @@ def upload():
     year = (request.form.get("year") or "").strip()
     if not year:
         year = datetime.now().strftime("%Y")
+    category = (request.form.get("category") or "").strip()
     token = (request.form.get("token") or "").strip()
     required = os.environ.get("UPLOAD_TOKEN", "").strip()
     if required and token != required:
@@ -164,7 +173,7 @@ def upload():
                 file,
                 folder=CLOUD_FOLDER,
                 tags=[TAG],
-                context={"caption": caption, "year": year},
+                context={"caption": caption, "year": year, "category": category},
             )
         except Exception:
             app.logger.exception("Cloudinary upload failed")
@@ -183,6 +192,7 @@ def upload():
                 "caption": caption,
                 "created_at": datetime.now().isoformat(timespec="seconds"),
                 "year": datetime.now().strftime("%Y"),
+                "category": category,
             }
         )
         _save_items(items)

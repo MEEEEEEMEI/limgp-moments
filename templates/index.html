@@ -11,6 +11,18 @@
       </div>
     </div>
   {% endif %}
+  <div class="card" style="margin-bottom: 16px;">
+    <div class="muted" style="margin-bottom: 8px;">分类筛选</div>
+    <div>
+      <a class="btn" style="text-decoration:none; margin-right:8px; {% if not selected_category %}background:#22c55e;color:#0b0c10;{% endif %}" href="{{ url_for('index') }}">全部</a>
+      {% if categories %}
+        {% for c in categories %}
+          <a class="btn" style="text-decoration:none; margin-right:8px; {% if selected_category == c %}background:#22c55e;color:#0b0c10;{% endif %}" href="{{ url_for('index', category=c) }}">{{ c }}</a>
+        {% endfor %}
+      {% endif %}
+      <a class="btn" style="text-decoration:none; margin-right:8px; {% if selected_category == '好吃极啦' %}background:#22c55e;color:#0b0c10;{% endif %}" href="{{ url_for('index', category='好吃极啦') }}">好吃极啦</a>
+    </div>
+  </div>
   {% if msg %}
     <div class="card" style="margin-bottom: 16px; border: 1px solid {% if level == 'error' %}#7f1d1d{% else %}#14532d{% endif %};">
       <div style="color: {% if level == 'error' %}#fca5a5{% else %}#86efac{% endif %};">
@@ -23,6 +35,10 @@
       <div class="muted" style="margin-bottom: 8px;">上传图片 + 文字说明</div>
       <input type="text" name="caption" placeholder="写下这一刻的文字" maxlength="200" />
       <input type="text" name="year" placeholder="年份（如 2026）" value="{{ selected_year }}" />
+      <select name="category" style="width:100%; padding:10px 12px; border-radius:8px; border:1px solid #2a2f3a; background:#0f1116; color:var(--ink); margin-bottom:12px;">
+        <option value="">选择分类</option>
+        <option value="好吃极啦" {% if selected_category == '好吃极啦' %}selected{% endif %}>好吃极啦</option>
+      </select>
       <input type="password" name="token" id="admin-token" placeholder="管理口令（上传/删除）" required />
       <input type="file" name="image" accept="image/*" required />
       <button class="btn" type="submit">上传</button>
