@@ -10,6 +10,7 @@ from typing import Any
 import cloudinary
 import cloudinary.api
 import cloudinary.uploader
+import cloudinary.utils
 from flask import Flask, redirect, render_template, request, send_from_directory, url_for
 from werkzeug.utils import secure_filename
 
@@ -67,10 +68,20 @@ def _load_items() -> list[dict[str, Any]]:
         for r in resources:
             context = r.get("context") or {}
             caption = context.get("caption", "")
+            public_id = r.get("public_id") or ""
+            image_url = r.get("secure_url") or r.get("url")
+            if public_id:
+                image_url, _ = cloudinary.utils.cloudinary_url(
+                    public_id,
+                    secure=True,
+                    resource_type="image",
+                    type="upload",
+                    fetch_format="auto",
+                )
             items.append(
                 {
                     "id": r.get("asset_id") or r.get("public_id"),
-                    "image_url": r.get("secure_url") or r.get("url"),
+                    "image_url": image_url,
                     "caption": caption,
                     "created_at": r.get("created_at", ""),
                 }
