@@ -11,7 +11,7 @@
     <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
       <div class="muted" style="margin-bottom: 8px;">上传图片 + 文字说明</div>
       <input type="text" name="caption" placeholder="写下这一刻的文字" maxlength="200" />
-      <input type="password" name="token" placeholder="上传口令" required />
+      <input type="password" name="token" id="admin-token" placeholder="管理口令（上传/删除）" required />
       <input type="file" name="image" accept="image/*" required />
       <button class="btn" type="submit">上传</button>
     </form>
@@ -36,7 +36,31 @@
           <p>{{ item.caption }}</p>
         {% endif %}
         <span>{{ item.created_at }}</span>
+        <form action="{{ url_for('delete') }}" method="post" class="delete-form" style="margin-top:10px;">
+          <input type="hidden" name="token" class="delete-token" />
+          <input type="hidden" name="source" value="{{ item.source }}" />
+          {% if item.source == 'cloud' %}
+            <input type="hidden" name="public_id" value="{{ item.public_id }}" />
+          {% else %}
+            <input type="hidden" name="filename" value="{{ item.image }}" />
+          {% endif %}
+          <button class="btn" type="submit" style="background:#b91c1c;">删除</button>
+        </form>
       </div>
     {% endfor %}
   </div>
+  <script>
+    const tokenInput = document.getElementById("admin-token");
+    document.querySelectorAll(".delete-form").forEach((form) => {
+      form.addEventListener("submit", (e) => {
+        const token = tokenInput ? tokenInput.value.trim() : "";
+        if (!token) {
+          e.preventDefault();
+          alert("请输入管理口令");
+          return;
+        }
+        form.querySelector(".delete-token").value = token;
+      });
+    });
+  </script>
 {% endblock %}

@@ -81,6 +81,8 @@ def _load_items() -> list[dict[str, Any]]:
             items.append(
                 {
                     "id": r.get("asset_id") or r.get("public_id"),
+                    "source": "cloud",
+                    "public_id": public_id,
                     "image_url": image_url,
                     "caption": caption,
                     "created_at": r.get("created_at", ""),
@@ -152,6 +154,7 @@ def upload():
         items.append(
             {
                 "id": uuid.uuid4().hex,
+                "source": "local",
                 "image": unique_name,
                 "caption": caption,
                 "created_at": datetime.now().isoformat(timespec="seconds"),
@@ -165,6 +168,42 @@ def upload():
 @app.errorhandler(413)
 def file_too_large(_):
     return "文件过大，最大 10MB", 413
+
+
+@app.route("/delete", methods=["POST"])
+def delete():
+    token = (request.form.get("token") or "").strip()
+    required = os.environ.get("UPLOAD_TOKEN", "").strip()
+    if required and token != required:
+        return redirect(url_for("index", msg="管理口令不正确", level="error"))
+
+    source = (request.form.get("source") or "").strip()
+    if source == "cloud":
+        public_id = (request.form.get("public_id") or "").strip()
+        if not public_id:
+            return redirect(url_for("index", msg="删除失败：缺少文件信息", level="error"))
+        try:
+            cloudinary.uploader.destroy(public_id, resource_type="image", type="upload")
+        except Exception:
+            app.logger.exception("Cloudinary delete failed")
+            return redirect(url_for("index", msg="删除失败，请稍后再试", level="error"))
+        return redirect(url_for("index", msg="已删除", level="success"))
+
+    filename = (request.form.get("filename") or "").strip()
+    if not filename:
+        return redirect(url_for("index", msg="删除失败：缺少文件信息", level="error"))
+    try:
+        file_path = UPLOAD_DIR / filename
+        if file_path.exists():
+            file_path.unlink()
+    except Exception:
+        app.logger.exception("Local delete failed")
+        return redirect(url_for("index", msg="删除失败，请稍后再试", level="error"))
+
+    items = _load_items()
+    items = [i for i in items if i.get("image") != filename]
+    _save_items(items)
+    return redirect(url_for("index", msg="已删除", level="success"))
 
 
 if __name__ == "__main__":
